@@ -5,18 +5,25 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AccountDTO {
+public class AccountCreatedDTO {
+    private String userName;
+    private String ownerEmail;
+    private String phone;
+    private String adhaar;
 
-    private String message;
+    private Long accountNo;
+    private String IFSCcode;
+    private Long customerId;
     private Double balance;
-    private Long accountNumber;
-    private Double amount;
+    private String password;
+
+
+
+
+
+
 }

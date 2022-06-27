@@ -12,9 +12,15 @@ import java.util.List;
 public class BusinessException extends RuntimeException {
 
     private List<ErrorModel> errors;
+    private String message;;
 
     public BusinessException(List<ErrorModel> errors){
 
         this.errors = errors;
     }
+    public BusinessException(String message){
+
+        this.message=message;
+    }
+
 }

@@ -29,8 +29,12 @@ public class CustomeExeceptionHandler {
         return new ResponseEntity<List<ErrorModel>>(errorModelList, HttpStatus.BAD_REQUEST);
 
     }
-    @ExceptionHandler(BusinessException.class)
+    /*@ExceptionHandler(BusinessException.class)
     public ResponseEntity<List<ErrorModel>> handleBusinessException(BusinessException bex){
         return new ResponseEntity<List<ErrorModel>>(bex.getErrors(), HttpStatus.BAD_REQUEST);
+    }*/
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<String> handleBusinessException(BusinessException bex){
+        return new ResponseEntity<String>(bex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }

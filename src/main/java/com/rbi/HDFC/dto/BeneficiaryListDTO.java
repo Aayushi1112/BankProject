@@ -5,18 +5,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import java.util.List;
+
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AccountDTO {
+public class BeneficiaryListDTO {
+    private Long customerId;
+    List<BeneficiaryDTO> beneficiaries;
 
-    private String message;
-    private Double balance;
-    private Long accountNumber;
-    private Double amount;
 }

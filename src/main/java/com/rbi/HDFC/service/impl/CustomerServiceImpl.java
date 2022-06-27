@@ -14,7 +14,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,249 +28,80 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     TransactionRepository transactionRepository;
 
+
     @Override
-    public CustomerDTO register(CustomerDTO customerDTO) {
-        Optional<CustomerEntity> customer = customerRepository.findByAdhaar(customerDTO.getAdhaar());
+
+    /**
+     * @param customerRegDTO
+     * Register a new customer check if customer with that adhaar already exist then do not register himand send error.
+     *  If customer is present notify him that he already has an account with the bank
+     *  copy values from CustomerRegisterDTO to the customerEntity
+     *  and also do OnetoOne mapping with the account entity and save the customer in database
+     *  next get the account row and set fields in that and save it and return
+     *  the account created dto after setting values into it
+     * @return
+     */
+    public AccountCreatedDTO register(CustomerRegisterDTO customerRegDTO) {
+        Optional<CustomerEntity> customer = customerRepository.findByAdhaar(customerRegDTO.getAdhaar());
+        AccountCreatedDTO accountCreatedDTO = new AccountCreatedDTO();
         List<ErrorModel> errors = null;
+      /******/
         if (customer.isPresent()) {
-            ErrorModel error = new ErrorModel();
-            error.setCode("EXIST_001");
-            error.setMessage("Sorry you have already registered with our bank,Adhaar is already in our database");
-            errors = new ArrayList<>();
-            errors.add(error);
-        } else {
+            throw new BusinessException("Account with this adhaar already exists");
+        }
+
+        else
+        {
             CustomerEntity customerEntity = new CustomerEntity();
             AccountEntity accentity = new AccountEntity();
-            accentity.setBalance(0.0);
             customerEntity.setAccount(accentity);
-            BeanUtils.copyProperties(customerDTO, customerEntity);
+            BeanUtils.copyProperties(customerRegDTO, customerEntity);
             customerEntity = customerRepository.save(customerEntity);
+            Optional<CustomerEntity> customerSaved = customerRepository.findByAdhaar(customerRegDTO.getAdhaar());
 
-            BeanUtils.copyProperties(customerEntity, customerDTO);
-            customerDTO.setAccountNo(customerEntity.getAccount().getAccountId());
-        }
-        if (errors != null) {
-            throw new BusinessException(errors);
-        } else {
-            return customerDTO;
-        }
-    }
-
-    @Override
-    public String login(String email, String password) {
-        String msg = "";
-        Optional<CustomerEntity> custEntity = customerRepository.findByOwnerEmailAndPassword(email, password);
-        if (custEntity.isPresent()) {
-            msg = "Yes you are authorized to login";
-        } else {
-            ErrorModel model = new ErrorModel();
-            model.setMessage("You are not an authorized person");
-            model.setCode("AUTH_001");
-            List<ErrorModel> errors = new ArrayList<>();
-            errors.add(model);
-            throw new BusinessException(errors);
-        }
-        return msg;
-    }
-
-    @Override
-    public AccountDTO credit(Long customerId, Double amount) {
-        AccountDTO accountDTO = new AccountDTO();
-        Optional<CustomerEntity> custEntity = customerRepository.findById(customerId);
-        if (custEntity.isPresent()) {
-            Long accNumber = custEntity.get().getAccount().getAccountId();
-            Optional<AccountEntity> accEntity = accountRepository.findById(accNumber);
-            AccountEntity accountEntity = null;
-
+            Optional<AccountEntity> accEntity = accountRepository.findById(customerSaved.get().getAccount().getAccountId());
             if (accEntity.isPresent()) {
-                accountEntity = accEntity.get();
-                Double balance = accountEntity.getBalance();
-                Double newBalance = balance + amount;
-                accountEntity.setBalance(newBalance);
-                accountEntity = accountRepository.save(accountEntity);
-                BeanUtils.copyProperties(accountEntity, accountDTO);
-
-                TransactionEntity transactionEntity = new TransactionEntity();
-                transactionEntity.setAmount(amount);
-                transactionEntity.setCustomerId(customerId);
-                transactionEntity.setTransactionType("Credit");
-                transactionEntity.setTime(LocalDateTime.now());
-                transactionEntity = transactionRepository.save(transactionEntity);
+                AccountEntity saveEn = accEntity.get();
+                accEntity.get().setBalance(0.0);
+                accEntity.get().setAccountNumber(customerSaved.get().getId() + 10000);
+                accEntity.get().setPassword(customerSaved.get().getOwnerName() + "*HDFC");
+                saveEn = accountRepository.save(saveEn);
+                accountCreatedDTO.setCustomerId(customerSaved.get().getId());
+                accountCreatedDTO.setAccountNo(saveEn.getAccountNumber());
+                accountCreatedDTO.setPassword(customerSaved.get().getOwnerName() + "*HDFC");
+                accountCreatedDTO.setUserName(customerSaved.get().getOwnerName());
+                accountCreatedDTO.setIFSCcode("HDFC_112");
             }
-        } else {
-            ErrorModel model = new ErrorModel();
-            model.setMessage("Sorry no account found");
-            model.setCode("ACCOUNT_001");
-            List<ErrorModel> errors = new ArrayList<>();
-            errors.add(model);
-            throw new BusinessException(errors);
-
+            else{
+                throw new BusinessException("Sorry no account found");
+            }
+        }
+        return accountCreatedDTO;
         }
 
 
+    /**
+     * @param accountNumber
+     * @param password
+     * Finds in the account database if account number and password exist if exist
+     * it retruns that you are welcome
+     * otherwise says not a registered user
+     * @return
+     */
+    @Override
+    public AccountDTO login(Long accountNumber, String password) {
+        AccountDTO accountDTO = new AccountDTO();
+        Optional<AccountEntity> accountEntity = accountRepository.findByAccountNumberAndPassword(accountNumber, password);
+        if (accountEntity.isPresent()) {
+            accountDTO.setMessage("************Welcome To HDFC Bank*******");
+            accountDTO.setAccountNumber(accountEntity.get().getAccountNumber());
+            accountDTO.setBalance(accountEntity.get().getBalance());
+        } else {
+
+            throw new BusinessException("You are not authorized to login");
+        }
         return accountDTO;
     }
 
-    @Override
-    public AccountDTO debit(Long customerId, Double amount) {
-        AccountDTO accountDTO = new AccountDTO();
-        Optional<CustomerEntity> custEntity = customerRepository.findById(customerId);
-        if (custEntity.isPresent()) {
-            Long accNumber = custEntity.get().getAccount().getAccountId();
-            Optional<AccountEntity> accEntity = accountRepository.findById(accNumber);
-            AccountEntity accountEntity = null;
 
-            if (accEntity.isPresent()) {
-                accountEntity = accEntity.get();
-                Double balance = accountEntity.getBalance();
-                Double newBalance = balance - amount;
-                accountEntity.setBalance(newBalance);
-                accountEntity = accountRepository.save(accountEntity);
-                BeanUtils.copyProperties(accountEntity, accountDTO);
-
-                TransactionEntity transactionEntity = new TransactionEntity();
-                transactionEntity.setAmount(amount);
-                transactionEntity.setCustomerId(customerId);
-                transactionEntity.setTransactionType("Debit");
-                transactionEntity.setTime(LocalDateTime.now());
-                transactionEntity = transactionRepository.save(transactionEntity);
-            }
-        } else {
-            ErrorModel model = new ErrorModel();
-            model.setMessage("Sorry no account found");
-            model.setCode("ACCOUNT_001");
-            List<ErrorModel> errors = new ArrayList<>();
-            errors.add(model);
-            throw new BusinessException(errors);
-
-        }
-
-
-        return accountDTO;
-    }
-
-    @Override
-    public List<TransactionDTO> getAllTransactions(Long customerId) {
-        Optional<List<TransactionEntity>> transactionEntityList = transactionRepository.findByCustomerId(customerId);
-        List<TransactionDTO> transactionList = new ArrayList<>();
-        if (transactionEntityList.isPresent()) {
-            List<TransactionEntity> transactionsList = transactionEntityList.get();
-
-            for (TransactionEntity entity : transactionsList) {
-                TransactionDTO transDTO = new TransactionDTO();
-                transDTO.setTransactionId(entity.getTransactionId());
-                transDTO.setTransactionType(entity.getTransactionType());
-                transDTO.setAmount(entity.getAmount());
-                transDTO.setTime(entity.getTime());
-                transDTO.setCustomerId(entity.getCustomerId());
-                transactionList.add(transDTO);
-            }
-
-        } else {
-            ErrorModel model = new ErrorModel();
-            model.setMessage("Sorry no transactions found");
-            model.setCode("TRANSACT_001");
-            List<ErrorModel> errors = new ArrayList<>();
-            errors.add(model);
-            throw new BusinessException(errors);
-
-
-        }
-        return transactionList;
-    }
-
-    @Override
-    public List<CustomerDTO> addBeneficiary(BeneficiaryDTO beneficiaryDTO) {
-        Optional<CustomerEntity> custEntity = customerRepository.findById(beneficiaryDTO.getCustomerId());
-        List<CustomerDTO> beneficairyList = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        if (custEntity.isPresent()) {
-            for (CustomerDTO c : beneficiaryDTO.getBeneficiaries()) {
-                Optional<CustomerEntity> benefiti = customerRepository.findById(c.getId());
-                if (benefiti.isPresent()) {
-                    CustomerDTO bene = new CustomerDTO();
-                    bene.setOwnerEmail(benefiti.get().getOwnerEmail());
-                    bene.setOwnerName(benefiti.get().getOwnerName());
-                    beneficairyList.add(bene);
-                    sb.append(c.getId().toString());
-                    sb.append(",");
-
-                } else {
-                    ErrorModel model = new ErrorModel();
-                    model.setMessage("Sorry no beneficiary account found for " + c.getId());
-                    model.setCode("ACCOUNT_002");
-                    List<ErrorModel> errors = new ArrayList<>();
-                    errors.add(model);
-                    throw new BusinessException(errors);
-                }
-
-            }
-            sb.deleteCharAt(sb.toString().length() - 1);
-            CustomerEntity customerEntity = custEntity.get();
-            customerEntity.setBeneficiaries(sb.toString());
-            customerEntity = customerRepository.save(customerEntity);
-
-
-        } else {
-            ErrorModel model = new ErrorModel();
-            model.setMessage("Sorry no account found");
-            model.setCode("ACCOUNT_001");
-            List<ErrorModel> errors = new ArrayList<>();
-            errors.add(model);
-            throw new BusinessException(errors);
-
-        }
-
-        return beneficairyList;
-    }
-
-    @Override
-    public String transferMoney(TransferDTO transferDTO) {
-        Optional<CustomerEntity> custEntity = customerRepository.findById(transferDTO.getCustId());
-        if (custEntity.isPresent()) {
-            CustomerEntity cust = custEntity.get();
-            cust.getAccount().getBalance();
-            if (transferDTO.getAmount() > cust.getAccount().getBalance()) {
-                ErrorModel model = new ErrorModel();
-                model.setMessage("Sorry you do not have sufficient balance in your account to make a transfer");
-                model.setCode("TRANSFER_001");
-                List<ErrorModel> errors = new ArrayList<>();
-                errors.add(model);
-                throw new BusinessException(errors);
-
-            }
-            else {
-                Optional<CustomerEntity> bene = customerRepository.findById(transferDTO.getBeneficiaryId());
-                if (bene.isPresent()) {
-                    CustomerEntity custEn = bene.get();
-                    Double newAmountBene = custEn.getAccount().getBalance() + transferDTO.getAmount();
-                    custEn.getAccount().setBalance(newAmountBene);
-                    custEn = customerRepository.save(custEn);
-                    Double newAmountCust = cust.getAccount().getBalance() - transferDTO.getAmount();
-                    cust.getAccount().setBalance(newAmountCust);
-                    cust=customerRepository.save(cust);
-
-                } else {
-                    ErrorModel model = new ErrorModel();
-                    model.setMessage("Sorry no beneficiary account found for " + transferDTO.getBeneficiaryId());
-                    model.setCode("ACCOUNT_002");
-                    List<ErrorModel> errors = new ArrayList<>();
-                    errors.add(model);
-                    throw new BusinessException(errors);
-                }
-            }
-
-
-        }
-        else{
-            ErrorModel model = new ErrorModel();
-            model.setMessage("Sorry no customer account found for " + transferDTO.getCustId());
-            model.setCode("ACCOUNT_002");
-            List<ErrorModel> errors = new ArrayList<>();
-            errors.add(model);
-            throw new BusinessException(errors);
-        }
-        return "Sucessfully transferred your money";
-
-    }
 }

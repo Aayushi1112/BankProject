@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Setter
 public class TransactionDTO {
     private Long transactionId;
-    private Long customerId;
     private String transactionType;
     private Double amount;
     private LocalDateTime time;

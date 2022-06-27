@@ -1,11 +1,12 @@
 package com.rbi.HDFC.entity;
 
-import com.rbi.HDFC.dto.CustomerDTO;
+import com.rbi.HDFC.dto.BeneficiaryDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -15,7 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 public class CustomerEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @SequenceGenerator(name = "myCustomerSeqGen", sequenceName = "myCustSeq", initialValue = 10, allocationSize = 100)
+    @GeneratedValue(generator = "myCustomerSeqGen")
     private Long id;
     @Column(name = "NAME")
     private String ownerName;
@@ -24,13 +26,12 @@ public class CustomerEntity {
     private String ownerEmail;
     @Column(name = "PHONE")
     private String phone;
-    @Column(name = "PASSWORD")
-    private String password;
+
     @Column(name = "ADHAAR")
     private String adhaar;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id")
     private AccountEntity account;
-
-    private String beneficiaries;
+@OneToMany( cascade = CascadeType.ALL,mappedBy ="customerEntity" )
+private List<BeneficiaryEntity> beneficiaries=new ArrayList<>();
 }

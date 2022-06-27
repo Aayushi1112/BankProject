@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @RestController
 public interface TransactionRepository extends JpaRepository<TransactionEntity,Long> {
-    Optional<List<TransactionEntity>> findByCustomerId(Long customerId);
 
+
+    Optional<List<TransactionEntity>> findByAccountNumber(Long accountNo);
 }

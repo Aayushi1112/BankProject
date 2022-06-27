@@ -17,8 +17,8 @@ public class TransactionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long transactionId;
-    private Long customerId;
     private String transactionType;
     private Double amount;
     private LocalDateTime time;
+    private Long accountNumber;
 }
