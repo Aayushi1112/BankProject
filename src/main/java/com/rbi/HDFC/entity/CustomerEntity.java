@@ -32,6 +32,8 @@ public class CustomerEntity {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id")
     private AccountEntity account;
-@OneToMany( cascade = CascadeType.ALL,mappedBy ="customerEntity" )
-private List<BeneficiaryEntity> beneficiaries=new ArrayList<>();
+@OneToMany(targetEntity = BeneficiaryEntity.class,
+        cascade = CascadeType.ALL ,mappedBy="customerEntity",fetch = FetchType.EAGER )
+//@JoinColumn(name = "Cust_id_fk",referencedColumnName = "id")
+private List<BeneficiaryEntity> beneficiaries;
 }

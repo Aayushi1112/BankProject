@@ -15,13 +15,14 @@ public class BeneficiaryEntity {
     @Id
     @SequenceGenerator(name = "myBenSeqGen", sequenceName = "myBenSeq", initialValue = 1, allocationSize = 100)
     @GeneratedValue(generator = "myBenSeqGen")
-    private Long benId;
+    private Long id;
     private String beneficiaryName;
     private String beneficiaryBank;
     private Long beneficiaryaccountNumber;
     private String beneficiaryIFSC;
     private Double moneyTransferred=0.0;
 
-   @ManyToOne
+  @ManyToOne(fetch = FetchType.EAGER)
+
    private  CustomerEntity customerEntity;
 }

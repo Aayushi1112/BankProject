@@ -10,5 +10,5 @@ public interface CustomerService {
     AccountDTO login(Long accountNumber, String password);
 
 
-
+    String deleteCustomer(CustomerLoginDTO customerLoginDTO);
 }

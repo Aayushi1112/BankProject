@@ -15,11 +15,14 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
+
 public class BeneficiaryServiceImpl implements BeneficiaryService {
     @Autowired
     CustomerRepository customerRepository;
@@ -48,6 +51,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
         if (custEntity.isPresent()) {
             //getting existing beneficiaries from the database
             List<BeneficiaryEntity> existBenefitry = custEntity.get().getBeneficiaries();
+            System.out.println("No of beneficiaries atached with your account are"+existBenefitry.size());
             List<BeneficiaryDTO> beneficiaryDTOList = beneficiaryListDTO.getBeneficiaries();
 //now take beneficieries from the dto and save it to the beneficiary table
             for (BeneficiaryDTO bdto : beneficiaryDTOList) {
@@ -61,6 +65,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
             //add all beneficiaries to the list to be returned to the customer
             beneficiaryListreturn.setBeneficiaries(beneficiaryList);
             existBenefitry.addAll(beneficiaryListnew);
+            System.out.println("your existing beneficiary list now updated and new size is"+existBenefitry.size());
             custEntityget.setBeneficiaries(existBenefitry);
             custEntityget = customerRepository.save(custEntityget);
         } else {
@@ -85,11 +90,10 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
             cust.getAccount().getBalance();
             if (transferDTO.getAmount() > cust.getAccount().getBalance()) {
                 throw new BusinessException("Sorry you do not have sufficient balance in your account to make a transfer");
-
             } else {
                 List<BeneficiaryEntity> be = cust.getBeneficiaries();
                 for (BeneficiaryEntity beneficiaryEntity : be) {
-                    if (transferDTO.getBenId() == beneficiaryEntity.getBenId()) {
+                    if (transferDTO.getBenId().equals(beneficiaryEntity.getId())) {
                         System.out.println("Beneficiary is found");
                         Double newBalance = cust.getAccount().getBalance() - transferDTO.getAmount();
                         cust.getAccount().setBalance(newBalance);
@@ -147,9 +151,12 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
             CustomerEntity cust = custEntity.get();
             List<BeneficiaryEntity> be = cust.getBeneficiaries();
             for (BeneficiaryEntity beneficiaryEntity : be) {
-                if (transferDTO.getBenId().equals(beneficiaryEntity.getBenId())) {
+                if (transferDTO.getBenId().equals(beneficiaryEntity.getId())) {
                     System.out.println("Beneficiary is found");
-                    beneficiaryRepository.deleteByBenId(transferDTO.getBenId());
+                    //beneficiaryRepository.deleteByBenId(transferDTO.getBenId());
+
+                    Long id=transferDTO.getBenId();
+                    beneficiaryRepository.deleteById(id);
                     flag = true;
                 }
             }

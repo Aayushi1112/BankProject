@@ -103,5 +103,14 @@ public class CustomerServiceImpl implements CustomerService {
         return accountDTO;
     }
 
+    @Override
+    public String deleteCustomer(CustomerLoginDTO customerLoginDTO) {
+        customerRepository.deleteById(customerLoginDTO.getId());
+        return "deleted";
+
+    }
+
+
+
 
 }

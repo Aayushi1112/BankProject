@@ -33,4 +33,10 @@ public class CustomerController {
         ResponseEntity<AccountDTO> responseEntity = new ResponseEntity<>(accountDTO, HttpStatus.OK);
         return responseEntity;
     }
+    @PostMapping("/deleteCustomer")
+    public ResponseEntity<String> deleteCustomer(@RequestBody CustomerLoginDTO customerLoginDTO) {
+        String msg = customerService.deleteCustomer(customerLoginDTO);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(msg, HttpStatus.OK);
+        return responseEntity;
+    }
 }
