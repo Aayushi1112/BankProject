@@ -153,8 +153,6 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
             for (BeneficiaryEntity beneficiaryEntity : be) {
                 if (transferDTO.getBenId().equals(beneficiaryEntity.getId())) {
                     System.out.println("Beneficiary is found");
-                    //beneficiaryRepository.deleteByBenId(transferDTO.getBenId());
-
                     Long id=transferDTO.getBenId();
                     beneficiaryRepository.deleteById(id);
                     flag = true;
