@@ -15,4 +15,6 @@ public interface BeneficiaryService {
     BeneficiaryListDTO getAllBeneficiaries(Long customerId);
 
     String deleteBeneficiary(TransferDTO transferDTO);
+
+    String deleteBeneficiary(Long custId, Long benId);
 }

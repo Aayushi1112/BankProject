@@ -19,6 +19,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -51,7 +52,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
         if (custEntity.isPresent()) {
             //getting existing beneficiaries from the database
             List<BeneficiaryEntity> existBenefitry = custEntity.get().getBeneficiaries();
-            System.out.println("No of beneficiaries atached with your account are"+existBenefitry.size());
+            System.out.println("No of beneficiaries atached with your account are" + existBenefitry.size());
             List<BeneficiaryDTO> beneficiaryDTOList = beneficiaryListDTO.getBeneficiaries();
 //now take beneficieries from the dto and save it to the beneficiary table
             for (BeneficiaryDTO bdto : beneficiaryDTOList) {
@@ -65,7 +66,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
             //add all beneficiaries to the list to be returned to the customer
             beneficiaryListreturn.setBeneficiaries(beneficiaryList);
             existBenefitry.addAll(beneficiaryListnew);
-            System.out.println("your existing beneficiary list now updated and new size is"+existBenefitry.size());
+            System.out.println("your existing beneficiary list now updated and new size is" + existBenefitry.size());
             custEntityget.setBeneficiaries(existBenefitry);
             custEntityget = customerRepository.save(custEntityget);
         } else {
@@ -98,7 +99,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
                         Double newBalance = cust.getAccount().getBalance() - transferDTO.getAmount();
                         cust.getAccount().setBalance(newBalance);
                         beneficiaryEntity.setMoneyTransferred(beneficiaryEntity.getMoneyTransferred() + transferDTO.getAmount());
-                        beneficiaryEntity=beneficiaryRepository.save(beneficiaryEntity);
+                        beneficiaryEntity = beneficiaryRepository.save(beneficiaryEntity);
                         cust = customerRepository.save(cust);
                         break;
                     }
@@ -153,7 +154,7 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
             for (BeneficiaryEntity beneficiaryEntity : be) {
                 if (transferDTO.getBenId().equals(beneficiaryEntity.getId())) {
                     System.out.println("Beneficiary is found");
-                    Long id=transferDTO.getBenId();
+                    Long id = transferDTO.getBenId();
                     beneficiaryRepository.deleteById(id);
                     flag = true;
                 }
@@ -165,5 +166,23 @@ public class BeneficiaryServiceImpl implements BeneficiaryService {
             throw new BusinessException("No customer found for : " + transferDTO.getCustId());
         }
         return "deleted";
+    }
+
+    @Override
+    public String deleteBeneficiary(Long custId, Long benId) {
+        Optional<CustomerEntity> custEntity = customerRepository.findById(custId);
+
+        if (custEntity.isPresent()) {
+            CustomerEntity cust = custEntity.get();
+            List<BeneficiaryEntity> be = cust.getBeneficiaries();
+            Optional<Long> beneficiaryIdFound=be.stream()
+                    .filter(benefi -> benefi.getId().equals(benId))
+                    .map(x->x.getId()).findAny();
+            if(beneficiaryIdFound.isPresent()){
+                beneficiaryRepository.deleteById(beneficiaryIdFound.get().longValue());
+
+            }
+        }
+        return "Deleted finally";
     }
 }

@@ -49,5 +49,13 @@ public class BeneficiaryController {
         ResponseEntity<String> responseEntity = new ResponseEntity<>(msg, HttpStatus.OK);
         return responseEntity;
     }
+
+    @DeleteMapping("/deletebeneficiary/{custId}/{benId}")
+    public ResponseEntity<String> deleteProperty(@PathVariable Long custId,@PathVariable Long benId){
+        String msg = beneficiaryService.deleteBeneficiary(custId,benId);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(msg, HttpStatus.OK);
+        return responseEntity;
+    }
+
 }
 
