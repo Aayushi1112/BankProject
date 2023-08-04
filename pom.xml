@@ -12,6 +12,7 @@
 	<artifactId>HDFC</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>HDFC</name>
+	<packaging>war</packaging>
 	<description>Project for banking operations in hdfc</description>
 	
 		<properties>
